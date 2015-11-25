@@ -18,15 +18,16 @@ namespace ArithmeticExpression.Expression
         {
             if (node.Operator != Operators.Operand)
             {
+                // We push left - right, so we are popping right - left
                 node.Right = _tree.Pop();
                 node.Left = _tree.Pop();
 
                 if (node.Operator == Operators.Define)
-                { // Special case -- defining variabled
+                { // Special case -- defining variables
                     if (node.Left == null || node.Right == null)
                         return;
                     Context.Variables[node.Left.Operand.Variable] = node.Right.Operand.Number;
-                    return;
+                    return; // Don't push it back on the stack. Or maybe do? for cool effects
                 }
             }
 
@@ -69,6 +70,11 @@ namespace ArithmeticExpression.Expression
                 Add(new ExpressionNode(number));
             else // Variable operand
                 Add(new ExpressionNode(token));
+        }
+
+        public void Clear()
+        {
+            _tree.Clear();
         }
 
         public ExpressionNode RootNode
