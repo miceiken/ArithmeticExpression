@@ -47,10 +47,19 @@ namespace ArithmeticExpression.Expression
             {
                 if (node.Left == null || node.Right == null)
                     return 0; // this shouldn't happen
-
+                if (System.Diagnostics.Debugger.IsAttached) {
+                    var l = Evaluate(node.Left);
+                    var r = Evaluate(node.Right);
+                    var res = Algebra.Evaluators[node.Operator](l, r);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("{0}({1}, {2})[{3}]",
+                        node.Operator, l, r,
+                        res);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    return res;
+                }
                 return Algebra.Evaluators[node.Operator](Evaluate(node.Left), Evaluate(node.Right));
             }
-
             return node.Operand.GetValue(Context);
         }
 
