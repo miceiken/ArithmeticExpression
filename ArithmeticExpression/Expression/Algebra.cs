@@ -16,7 +16,8 @@ namespace ArithmeticExpression.Expression
                 ['+'] = Operators.Add,
                 ['-'] = Operators.Subtract,
                 ['^'] = Operators.Exponent,
-                //['-'] = Operators.Negate,
+                ['%'] = Operators.Modulus,
+
                 ['='] = Operators.Define
             };
 
@@ -28,6 +29,8 @@ namespace ArithmeticExpression.Expression
                 [Operators.Add] = (l, r) => l + r,
                 [Operators.Subtract] = (l, r) => l - r,
                 [Operators.Exponent] = (l, r) => Math.Pow(l, r),
+                [Operators.Modulus] = (l, r) => l % r,
+
                 [Operators.Define] = (l, r) => r,
             };
     }

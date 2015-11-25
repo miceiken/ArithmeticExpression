@@ -44,14 +44,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DepthTraversalMethod.cs" />
     <Compile Include="Expression\Algebra.cs" />
     <Compile Include="Expression\Expression.cs" />
     <Compile Include="Expression\BinTree\ExpressionNode.cs" />
     <Compile Include="Expression\OperandContext.cs" />
     <Compile Include="Expression\Operand.cs" />
     <Compile Include="Expression\Operators.cs" />
+    <Compile Include="Parser\TokenStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tokenizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

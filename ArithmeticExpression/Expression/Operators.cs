@@ -9,12 +9,14 @@ namespace ArithmeticExpression.Expression
     public enum Operators
     {
         Operand,
+
         Multiply,
         Divide,
         Add,
         Subtract,
         Exponent,
-        Negate,
+        Modulus,
+
         Define
     }
 }

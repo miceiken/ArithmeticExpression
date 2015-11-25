@@ -13,7 +13,7 @@ namespace ArithmeticExpression
         static void Main(string[] args)
         {
             Console.Title = "ArithmeticExpression";
-            Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree");
+            Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree, 'pre', 'in', 'post' (def.) for change of traversals");
 
             var e = new Expression.Expression();
 
@@ -22,22 +22,34 @@ namespace ArithmeticExpression
             {
                 switch (line)
                 {
-                    case "vars":
+                    // Change between traversals
+                    case "pre": e = new Expression.Expression(DepthTraversalMethod.PreOrder); break;
+                    case "in": e = new Expression.Expression(DepthTraversalMethod.InOrder); break;
+                    case "post": e = new Expression.Expression(DepthTraversalMethod.PostOrder); break;
+
+                    case "vars": // Dump variables
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
                         Console.WriteLine("Variables:");
                         foreach (var kvp in e.Context.Variables)
-                            Console.WriteLine("{0} = {1}", kvp.Key, kvp.Value);
+                            Console.WriteLine("\t{0} = {1}", kvp.Key, kvp.Value);
                         Console.ForegroundColor = ConsoleColor.Gray;
                         break;
-                    case "clear":
+
+                    case "clear": // Clears stack and console
                         e.Clear();
                         Console.Clear();
                         break;
-                    default:
+
+                    default: // TOKEN!!!!!!
                         e.Add(line);
-                        Console.WriteLine("Result: {0}", e.Evaluate());
+
+                        Console.Write("Stack: ");
+                        if (!e.IsComplete)
+                            Console.WriteLine(string.Join(" ", e.TreeStack.Select(n => n.GetEvaluated(e.Context))));
+                        else
+                            Console.WriteLine(e.Evaluate());
                         break;
-                }             
+                }
             }
         }
     }

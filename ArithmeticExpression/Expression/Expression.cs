@@ -9,59 +9,108 @@ namespace ArithmeticExpression.Expression
 {
     public class Expression
     {
-        public Expression() { }
+        public Expression()
+            : this(DepthTraversalMethod.PostOrder)
+        { }
 
-        private Stack<ExpressionNode> _tree = new Stack<ExpressionNode>();
-        public OperandContext Context { get; set; } = new OperandContext();        
+        public Expression(DepthTraversalMethod traversal)
+        {
+            Traversal = traversal;
+        }
+        
+                public Stack<ExpressionNode> TreeStack { get; private set; } = new Stack<ExpressionNode>();
+        public OperandContext Context { get; set; } = new OperandContext();
+        public DepthTraversalMethod Traversal { get; private set; } = DepthTraversalMethod.PostOrder;
+
+        public bool IsComplete
+        {
+            get { return TreeStack.Count == 1; }
+        }
+
+        public ExpressionNode Tree
+        {
+            get
+            {
+                if (!IsComplete)
+                    return null; // Tree is not complete
+                return TreeStack.Peek();
+            }
+        }
 
         public void Add(ExpressionNode node)
         {
-            if (node.Operator != Operators.Operand)
+            TreeStack.Push(node);
+
+            while (TreeStack.Count > 0 && TreeStack.Count % 3 == 0)
             {
-                // We push left - right, so we are popping right - left
-                node.Right = _tree.Pop();
-                node.Left = _tree.Pop();
+                ExpressionNode leftOperand, rightOperand, exprOperator;
 
-                if (node.Operator == Operators.Define)
-                { // Special case -- defining variables
-                    if (node.Left == null || node.Right == null)
-                        return;
-                    Context.Variables[node.Left.Operand.Variable] = node.Right.Operand.Number;
-                    return; // Don't push it back on the stack. Or maybe do? for cool effects
+                switch (Traversal)
+                {
+                    case DepthTraversalMethod.PreOrder:
+                        rightOperand = TreeStack.Pop();
+                        leftOperand = TreeStack.Pop();
+                        exprOperator = TreeStack.Pop();
+                        break;
+
+                    case DepthTraversalMethod.InOrder:
+                        rightOperand = TreeStack.Pop();
+                        exprOperator = TreeStack.Pop();
+                        leftOperand = TreeStack.Pop();
+                        break;
+
+                    default:
+                    case DepthTraversalMethod.PostOrder:
+                        exprOperator = TreeStack.Pop();
+                        rightOperand = TreeStack.Pop();
+                        leftOperand = TreeStack.Pop();
+                        break;
                 }
-            }
 
-            _tree.Push(node);
+                exprOperator.Left = leftOperand;
+                exprOperator.Right = rightOperand;
+                if (exprOperator.Operator == Operators.Define)
+                { // Special case -- defining variables
+                    Context.Variables[leftOperand.Operand.Variable] = rightOperand.Operand.Number;
+                    continue; // Don't push defines on stack
+                }
+
+                TreeStack.Push(exprOperator);
+            }
         }
 
         public double Evaluate()
         {
-            return Evaluate(RootNode);
+            return Tree.GetEvaluated(Context);
+            //return Evaluate(Tree);
         }
 
-        public double Evaluate(ExpressionNode node)
-        {
-            if (node == null) return 0;
+        //public double Evaluate(ExpressionNode node)
+        //{
+        //    if (node == null) return 0;
 
-            if (node.Operator != Operators.Operand)
-            {
-                if (node.Left == null || node.Right == null)
-                    return 0; // this shouldn't happen
-                if (System.Diagnostics.Debugger.IsAttached) {
-                    var l = Evaluate(node.Left);
-                    var r = Evaluate(node.Right);
-                    var res = Algebra.Evaluators[node.Operator](l, r);
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("{0}({1}, {2})[{3}]",
-                        node.Operator, l, r,
-                        res);
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    return res;
-                }
-                return Algebra.Evaluators[node.Operator](Evaluate(node.Left), Evaluate(node.Right));
-            }
-            return node.Operand.GetValue(Context);
-        }
+        //    if (node.Operator != Operators.Operand)
+        //    {
+        //        if (node.Left == null || node.Right == null)
+        //            return 0; // this shouldn't happen
+
+        //        // cue ugly debug code
+        //        if (System.Diagnostics.Debugger.IsAttached)
+        //        {
+        //            var l = Evaluate(node.Left);
+        //            var r = Evaluate(node.Right);
+        //            var res = Algebra.Evaluators[node.Operator](l, r);
+        //            Console.ForegroundColor = ConsoleColor.Red;
+        //            Console.WriteLine("{0}({1}, {2}) = {3}", node.Operator, l, r, res);
+        //            Console.ForegroundColor = ConsoleColor.Gray;
+        //            return res;
+        //        }
+        //        // the end
+
+        //        return Algebra.Evaluators[node.Operator](Evaluate(node.Left), Evaluate(node.Right));
+        //    }
+        //    return node.Operand.GetValue(Context);
+        //}
 
         public void Add(string token)
         {
@@ -83,17 +132,7 @@ namespace ArithmeticExpression.Expression
 
         public void Clear()
         {
-            _tree.Clear();
-        }
-
-        public ExpressionNode RootNode
-        {
-            get
-            {
-                if (_tree.Count != 1)
-                    return null; // Tree is not complete
-                return _tree.Peek();
-            }
+            TreeStack.Clear();
         }
     }
 }
