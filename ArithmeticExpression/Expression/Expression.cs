@@ -93,15 +93,9 @@ namespace ArithmeticExpression.Expression
                     i = precedents.Pop();
                     var oper = (OperatorNode)TreeStack[i];
                     oper.SetChildren(TreeStack[i - 1], TreeStack[i + 1]);
-                    if (oper.Activate(Context))
-                    {
-                        TreeStack.RemoveAt(i + 1);
-                        TreeStack.RemoveAt(i - 1);
-                    }
-                    else
-                        TreeStack.RemoveRange(i - 1, 3);      
-
-                    i--;
+                    TreeStack.RemoveRange(--i, 3);
+                    if (!oper.Consume(Context))
+                        TreeStack.Insert(i, oper);
                 }
             }
 

@@ -17,7 +17,7 @@ namespace ArithmeticExpression.Expression.BinTree
             Right = right;
         }
 
-        public virtual bool Activate(OperandContext ctx) { return true; }
+        public virtual bool Consume(OperandContext ctx) { return false; }
 
         public abstract double Evaluate(OperandContext ctx);
         public abstract string Literal { get; }
