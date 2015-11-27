@@ -7,7 +7,23 @@ using System.Threading.Tasks;
 namespace ArithmeticExpression.Expression
 {
     [Flags]
-    public enum Operators
+    public enum AssignmentOperators
+    {
+        Define
+    }
+
+    [Flags]
+    public enum UnaryOperators
+    {
+        Plus,
+        Minus,
+        Increment,
+        Decrement,
+        Invert
+    }    
+
+    [Flags]
+    public enum ArithmeticOperators
     {
         Multiply,
         Divide,

@@ -30,6 +30,11 @@ namespace ArithmeticExpression.Expression
             }
         }
 
+        public void SetExpression(ExpressionNode node)
+        {
+            TreeStack = new List<ExpressionNode> { node };
+        }
+
         public void Add(ExpressionNode node)
         {
             TreeStack.Add(node);
@@ -43,24 +48,6 @@ namespace ArithmeticExpression.Expression
         public double Evaluate()
         {
             return Tree.Evaluate(Context);
-        }
-
-        public void Add(string token)
-        { // cheap ass parser
-            if (token.Any(char.IsWhiteSpace))
-            { // If there are whitespaces, then these are tokenSSSSSS
-                foreach (var t in token.Split(' '))
-                    Add(t);
-                return;
-            }
-
-            double number;
-            if (token.Length == 1 && Algebra.CharOperators.ContainsKey(token[0]))
-                Add(new OperatorNode(Algebra.CharOperators[token[0]]));
-            else if (double.TryParse(token, out number))
-                Add(new ValueNode(number));
-            else
-                Add(new VariableNode(token));
         }
 
         public ExpressionNode PrecedenceBuild()
@@ -80,7 +67,7 @@ namespace ArithmeticExpression.Expression
 
                 if (TreeStack[i] is OperatorNode)
                 {
-                    if (precedents.Count == 0 || ((OperatorNode)TreeStack[i]).Precedence < ((OperatorNode)TreeStack[precedents.Peek()]).Precedence)
+                    if (i > 0 && (precedents.Count == 0 || ((OperatorNode)TreeStack[i]).Precedence < ((OperatorNode)TreeStack[precedents.Peek()]).Precedence))
                     {
                         precedents.Push(i);
                         if (hasNext(i))

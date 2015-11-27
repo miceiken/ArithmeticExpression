@@ -8,30 +8,17 @@ namespace ArithmeticExpression.Expression
 {
     public static class Algebra
     {
-        public static readonly Dictionary<char, Operators> CharOperators
-            = new Dictionary<char, Operators>()
+        public static readonly Dictionary<ArithmeticOperators, Func<double, double, double>> ArithmeticEvaluators
+            = new Dictionary<ArithmeticOperators, Func<double, double, double>>()
             {
-                ['*'] = Operators.Multiply,
-                ['/'] = Operators.Divide,
-                ['+'] = Operators.Add,
-                ['-'] = Operators.Subtract,
-                ['^'] = Operators.Exponent,
-                ['%'] = Operators.Modulus,
+                [ArithmeticOperators.Multiply] = (l, r) => l * r,
+                [ArithmeticOperators.Divide] = (l, r) => l / r,
+                [ArithmeticOperators.Add] = (l, r) => l + r,
+                [ArithmeticOperators.Subtract] = (l, r) => l - r,
+                [ArithmeticOperators.Exponent] = (l, r) => Math.Pow(l, r),
+                [ArithmeticOperators.Modulus] = (l, r) => l % r,
 
-                ['='] = Operators.Define
-            };
-
-        public static readonly Dictionary<Operators, Func<double, double, double>> Evaluators
-            = new Dictionary<Operators, Func<double, double, double>>()
-            {
-                [Operators.Multiply] = (l, r) => l * r,
-                [Operators.Divide] = (l, r) => l / r,
-                [Operators.Add] = (l, r) => l + r,
-                [Operators.Subtract] = (l, r) => l - r,
-                [Operators.Exponent] = (l, r) => Math.Pow(l, r),
-                [Operators.Modulus] = (l, r) => l % r,
-
-                [Operators.Define] = (l, r) => r,
+                [ArithmeticOperators.Define] = (l, r) => r,
             };
     }
 }

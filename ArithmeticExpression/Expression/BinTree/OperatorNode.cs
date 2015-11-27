@@ -8,28 +8,28 @@ namespace ArithmeticExpression.Expression.BinTree
 {
     public class OperatorNode : ExpressionNode
     {
-        public static readonly Dictionary<Operators, Precedence> OperatorPrecedence = new Dictionary<Operators, Precedence>()
+        public static readonly Dictionary<ArithmeticOperators, Precedence> OperatorPrecedence = new Dictionary<ArithmeticOperators, Precedence>()
         {
-            [Operators.Multiply] = Precedence.Multiplicative,
-            [Operators.Divide] = Precedence.Multiplicative,
-            [Operators.Exponent] = Precedence.Multiplicative,
-            [Operators.Modulus] = Precedence.Multiplicative,
-            [Operators.Add] = Precedence.Additive,
-            [Operators.Subtract] = Precedence.Additive,
-            [Operators.Define] = Precedence.Assignment,
+            [ArithmeticOperators.Multiply] = Precedence.Multiplicative,
+            [ArithmeticOperators.Divide] = Precedence.Multiplicative,
+            [ArithmeticOperators.Exponent] = Precedence.Multiplicative,
+            [ArithmeticOperators.Modulus] = Precedence.Multiplicative,
+            [ArithmeticOperators.Add] = Precedence.Additive,
+            [ArithmeticOperators.Subtract] = Precedence.Additive,
+            [ArithmeticOperators.Define] = Precedence.Assignment,
         };
 
-        public OperatorNode(Operators oper)
+        public OperatorNode(ArithmeticOperators oper)
         {
             Operator = oper;
         }
 
-        public Operators Operator { get; private set; }
+        public ArithmeticOperators Operator { get; private set; }
         public Precedence Precedence { get { return OperatorPrecedence[Operator]; } }
 
         public override bool Consume(OperandContext ctx)
         {
-            if (Operator == Operators.Define)
+            if (Operator == ArithmeticOperators.Define)
             {
                 ctx.Variables[((VariableNode)Left).VariableName] = Right.Evaluate(ctx);
                 return true;
@@ -41,7 +41,7 @@ namespace ArithmeticExpression.Expression.BinTree
         {
             if (Left == null || (Right == null && Precedence != Precedence.Unary))
                 throw new Exception("Trying to evaluate operator withouth any operands");
-            return Algebra.Evaluators[Operator](Left.Evaluate(ctx), Right.Evaluate(ctx));
+            return Algebra.ArithmeticEvaluators[Operator](Left.Evaluate(ctx), Right.Evaluate(ctx));
         }
 
         public override string Literal { get { return string.Format("{0} ({1})", Operator, Precedence); } }

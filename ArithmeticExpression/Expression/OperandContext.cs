@@ -11,7 +11,7 @@ namespace ArithmeticExpression.Expression
         public Dictionary<string, double> Variables { get; private set; } = new Dictionary<string, double>()
         {
             ["Pi"] = Math.PI,
-            ["e"] = Math.E
+            ["e"] = Math.E,
         };
     }
 }
