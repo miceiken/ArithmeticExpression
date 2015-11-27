@@ -19,7 +19,7 @@ namespace ArithmeticExpression.Expression
         Define
     }
 
-    public enum Precedence
+    public enum Precedence : ushort
     {
         Primary = 0,
         Unary,

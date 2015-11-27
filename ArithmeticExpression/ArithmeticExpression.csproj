@@ -51,6 +51,8 @@
     <Compile Include="Expression\BinTree\ExpressionNode.cs" />
     <Compile Include="Expression\OperandContext.cs" />
     <Compile Include="Expression\Operators.cs" />
+    <Compile Include="Interpreter\InputParser.cs" />
+    <Compile Include="Interpreter\TokenParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

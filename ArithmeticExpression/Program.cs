@@ -16,6 +16,7 @@ namespace ArithmeticExpression
             Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree");
 
             var e = new Expression.Expression();
+            var p = new Interpreter.InputParser(e);
 
             string line;
             while (!string.IsNullOrEmpty(line = Console.ReadLine()))
@@ -30,14 +31,12 @@ namespace ArithmeticExpression
                         Console.ForegroundColor = ConsoleColor.Gray;
                         break;
 
-                    case "clear": // Clears stack and console
+                    case "clear":
                         e.Clear();
-                        Console.Clear();
                         break;
 
                     default:
-                        e.Add(line);
-                        e.Build();
+                        p.Parse(line);
 
                         Console.Write("Stack: ");
                         if (!e.IsComplete)
@@ -47,6 +46,8 @@ namespace ArithmeticExpression
                         break;
                 }
             }
+
+            Console.ReadKey();
         }
     }
 }

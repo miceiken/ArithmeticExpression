@@ -63,7 +63,7 @@ namespace ArithmeticExpression.Expression
                 Add(new VariableNode(token));
         }
 
-        public ExpressionNode Build()
+        public ExpressionNode PrecedenceBuild()
         {
             if (TreeStack.Count == 0) throw new Exception("Empty expression tree");
             if (TreeStack.Count == 1) return TreeStack[0];
@@ -75,7 +75,7 @@ namespace ArithmeticExpression.Expression
             {
                 // TODO: unary check
 
-                if (TreeStack[i] is OperandNode && i + 1 < TreeStack.Count)
+                if (TreeStack[i] is OperandNode && hasNext(i))
                     continue;
 
                 if (TreeStack[i] is OperatorNode)
@@ -83,7 +83,7 @@ namespace ArithmeticExpression.Expression
                     if (precedents.Count == 0 || ((OperatorNode)TreeStack[i]).Precedence < ((OperatorNode)TreeStack[precedents.Peek()]).Precedence)
                     {
                         precedents.Push(i);
-                        if (i + 1 < TreeStack.Count)
+                        if (hasNext(i))
                             continue;
                     }
                 }
@@ -91,6 +91,36 @@ namespace ArithmeticExpression.Expression
                 while (precedents.Count > 0)
                 {
                     i = precedents.Pop();
+                    var oper = (OperatorNode)TreeStack[i];
+                    oper.SetChildren(TreeStack[i - 1], TreeStack[i + 1]);
+                    TreeStack.RemoveRange(--i, 3);
+                    if (!oper.Consume(Context))
+                        TreeStack.Insert(i, oper);
+                }
+            }
+
+            if (TreeStack.Count == 0)
+                return null; // This can happen if we i.e. define variables and the stack otherwise is empty
+
+            return TreeStack[0];
+        }
+
+        public ExpressionNode Build()
+        {
+            if (TreeStack.Count == 0) throw new Exception("Empty expression tree");
+            if (TreeStack.Count == 1) return TreeStack[0];
+
+            var hasNext = new Func<int, bool>(i => i + 1 < TreeStack.Count);
+
+            for (var i = 0; i < TreeStack.Count; i++)
+            {
+                // TODO: unary check
+
+                if (TreeStack[i] is OperandNode)
+                    continue;
+
+                if (TreeStack[i] is OperatorNode)
+                { 
                     var oper = (OperatorNode)TreeStack[i];
                     oper.SetChildren(TreeStack[i - 1], TreeStack[i + 1]);
                     TreeStack.RemoveRange(--i, 3);
