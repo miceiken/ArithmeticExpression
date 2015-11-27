@@ -37,12 +37,7 @@ namespace ArithmeticExpression
 
                     default:
                         p.Parse(line);
-
-                        Console.Write("Stack: ");
-                        if (!e.IsComplete)
-                            Console.WriteLine(string.Join(" ", e.TreeStack.Select(n => n.Evaluate(e.Context))));
-                        else
-                            Console.WriteLine(e.Evaluate());
+                        Console.WriteLine("Stack: [{0}]", string.Join(" ", e.TreeStack.Select(n => n.Evaluate(e.Context))));
                         break;
                 }
             }
