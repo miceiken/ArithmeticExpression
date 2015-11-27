@@ -13,7 +13,7 @@ namespace ArithmeticExpression
         static void Main(string[] args)
         {
             Console.Title = "ArithmeticExpression";
-            Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree, 'pre', 'in', 'post' (def.) for change of traversals");
+            Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree");
 
             var e = new Expression.Expression();
 
@@ -22,11 +22,6 @@ namespace ArithmeticExpression
             {
                 switch (line)
                 {
-                    // Change between traversals
-                    case "pre": e = new Expression.Expression(DepthTraversalMethod.PreOrder); break;
-                    case "in": e = new Expression.Expression(DepthTraversalMethod.InOrder); break;
-                    case "post": e = new Expression.Expression(DepthTraversalMethod.PostOrder); break;
-
                     case "vars": // Dump variables
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
                         Console.WriteLine("Variables:");
@@ -40,12 +35,13 @@ namespace ArithmeticExpression
                         Console.Clear();
                         break;
 
-                    default: // TOKEN!!!!!!
+                    default:
                         e.Add(line);
+                        e.Build();
 
                         Console.Write("Stack: ");
                         if (!e.IsComplete)
-                            Console.WriteLine(string.Join(" ", e.TreeStack.Select(n => n.GetEvaluated(e.Context))));
+                            Console.WriteLine(string.Join(" ", e.TreeStack.Select(n => n.Evaluate(e.Context))));
                         else
                             Console.WriteLine(e.Evaluate());
                         break;

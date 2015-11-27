@@ -10,17 +10,10 @@ namespace ArithmeticExpression.Expression
     public class Expression
     {
         public Expression()
-            : this(DepthTraversalMethod.PostOrder)
         { }
 
-        public Expression(DepthTraversalMethod traversal)
-        {
-            Traversal = traversal;
-        }
-        
-                public Stack<ExpressionNode> TreeStack { get; private set; } = new Stack<ExpressionNode>();
+        public List<ExpressionNode> TreeStack { get; private set; } = new List<ExpressionNode>();
         public OperandContext Context { get; set; } = new OperandContext();
-        public DepthTraversalMethod Traversal { get; private set; } = DepthTraversalMethod.PostOrder;
 
         public bool IsComplete
         {
@@ -33,87 +26,27 @@ namespace ArithmeticExpression.Expression
             {
                 if (!IsComplete)
                     return null; // Tree is not complete
-                return TreeStack.Peek();
+                return Build();
             }
         }
 
         public void Add(ExpressionNode node)
         {
-            TreeStack.Push(node);
+            TreeStack.Add(node);
+        }
 
-            while (TreeStack.Count > 0 && TreeStack.Count % 3 == 0)
-            {
-                ExpressionNode leftOperand, rightOperand, exprOperator;
-
-                switch (Traversal)
-                {
-                    case DepthTraversalMethod.PreOrder:
-                        rightOperand = TreeStack.Pop();
-                        leftOperand = TreeStack.Pop();
-                        exprOperator = TreeStack.Pop();
-                        break;
-
-                    case DepthTraversalMethod.InOrder:
-                        rightOperand = TreeStack.Pop();
-                        exprOperator = TreeStack.Pop();
-                        leftOperand = TreeStack.Pop();
-                        break;
-
-                    default:
-                    case DepthTraversalMethod.PostOrder:
-                        exprOperator = TreeStack.Pop();
-                        rightOperand = TreeStack.Pop();
-                        leftOperand = TreeStack.Pop();
-                        break;
-                }
-
-                exprOperator.Left = leftOperand;
-                exprOperator.Right = rightOperand;
-                if (exprOperator.Operator == Operators.Define)
-                { // Special case -- defining variables
-                    Context.Variables[leftOperand.Operand.Variable] = rightOperand.Operand.Number;
-                    continue; // Don't push defines on stack
-                }
-
-                TreeStack.Push(exprOperator);
-            }
+        public void Clear()
+        {
+            TreeStack.Clear();
         }
 
         public double Evaluate()
         {
-            return Tree.GetEvaluated(Context);
-            //return Evaluate(Tree);
+            return Tree.Evaluate(Context);
         }
 
-        //public double Evaluate(ExpressionNode node)
-        //{
-        //    if (node == null) return 0;
-
-        //    if (node.Operator != Operators.Operand)
-        //    {
-        //        if (node.Left == null || node.Right == null)
-        //            return 0; // this shouldn't happen
-
-        //        // cue ugly debug code
-        //        if (System.Diagnostics.Debugger.IsAttached)
-        //        {
-        //            var l = Evaluate(node.Left);
-        //            var r = Evaluate(node.Right);
-        //            var res = Algebra.Evaluators[node.Operator](l, r);
-        //            Console.ForegroundColor = ConsoleColor.Red;
-        //            Console.WriteLine("{0}({1}, {2}) = {3}", node.Operator, l, r, res);
-        //            Console.ForegroundColor = ConsoleColor.Gray;
-        //            return res;
-        //        }
-        //        // the end
-
-        //        return Algebra.Evaluators[node.Operator](Evaluate(node.Left), Evaluate(node.Right));
-        //    }
-        //    return node.Operand.GetValue(Context);
-        //}
-
         public void Add(string token)
-        {
+        { // cheap ass parser
             if (token.Any(char.IsWhiteSpace))
             { // If there are whitespaces, then these are tokenSSSSSS
                 foreach (var t in token.Split(' '))
@@ -122,17 +55,60 @@ namespace ArithmeticExpression.Expression
             }
 
             double number;
-            if (token.Length == 1 && Algebra.CharOperators.ContainsKey(token[0])) // Operator
-                Add(new ExpressionNode(Algebra.CharOperators[token[0]]));
-            else if (double.TryParse(token, out number)) // Number Operand
-                Add(new ExpressionNode(number));
-            else // Variable operand
-                Add(new ExpressionNode(token));
+            if (token.Length == 1 && Algebra.CharOperators.ContainsKey(token[0]))
+                Add(new OperatorNode(Algebra.CharOperators[token[0]]));
+            else if (double.TryParse(token, out number))
+                Add(new ValueNode(number));
+            else
+                Add(new VariableNode(token));
         }
 
-        public void Clear()
+        public ExpressionNode Build()
         {
-            TreeStack.Clear();
+            if (TreeStack.Count == 0) throw new Exception("Empty expression tree");
+            if (TreeStack.Count == 1) return TreeStack[0];
+
+            var hasNext = new Func<int, bool>(i => i + 1 < TreeStack.Count);
+
+            var precedents = new Stack<int>();
+            for (var i = 0; i < TreeStack.Count; i++)
+            {
+                // TODO: unary check
+
+                if (TreeStack[i] is OperandNode && i + 1 < TreeStack.Count)
+                    continue;
+
+                if (TreeStack[i] is OperatorNode)
+                {
+                    if (precedents.Count == 0 || ((OperatorNode)TreeStack[i]).Precedence < ((OperatorNode)TreeStack[precedents.Peek()]).Precedence)
+                    {
+                        precedents.Push(i);
+                        if (i + 1 < TreeStack.Count)
+                            continue;
+                    }
+                }
+
+                while (precedents.Count > 0)
+                {
+                    i = precedents.Pop();
+                    var oper = (OperatorNode)TreeStack[i];
+                    oper.SetChildren(TreeStack[i - 1], TreeStack[i + 1]);
+                    if (oper.Activate(Context))
+                    {
+                        TreeStack.RemoveAt(i + 1);
+                        TreeStack.RemoveAt(i - 1);
+                    }
+                    else
+                        TreeStack.RemoveRange(i - 1, 3);      
+
+                    i--;
+                }
+            }
+
+            if (TreeStack.Count == 0)
+                return null; // This can happen if we i.e. define variables and the stack otherwise is empty
+
+            return TreeStack[0];
         }
     }
 }

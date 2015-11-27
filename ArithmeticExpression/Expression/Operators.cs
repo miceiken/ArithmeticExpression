@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Expression
 {
+    [Flags]
     public enum Operators
     {
-        Operand,
-
         Multiply,
         Divide,
         Add,
@@ -18,5 +17,19 @@ namespace ArithmeticExpression.Expression
         Modulus,
 
         Define
+    }
+
+    public enum Precedence
+    {
+        Primary = 0,
+        Unary,
+        Multiplicative,
+        Additive,
+        Shift,
+        Relational,
+        Equality,
+        Logical, // AND XOR OR
+        Conditional, // AND OR
+        Assignment
     }
 }
