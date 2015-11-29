@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Interpreter
 {
     public class TokenParser<T> where T : struct
     {
-        public TokenParser(T general)
+        public TokenParser(T def)
         {
-            _general = general;
+            _default = def;
         }
 
-        private T _general;
+        private T _default;
 
         public IEnumerable<TokenMatch<T>> Parse(string text)
         {
@@ -22,31 +23,28 @@ namespace ArithmeticExpression.Interpreter
             var gIdx = -1;
             for (int i = 0; i < text.Length; i++)
             {
-                if (rules.Any(c => c.Compare(text, i, text.Length).IsMatch))
+                if (rules.Any(c => !string.IsNullOrEmpty(c.Compare(text, i, text.Length))))
                 {
                     if (gIdx > -1)
                     {
-                        yield return new TokenMatch<T> { Type = _general, Match = text.Substring(gIdx, i - gIdx) };
+                        yield return new TokenMatch<T> { Type = _default, Match = text.Substring(gIdx, i - gIdx) };
                         gIdx = -1;
                     }
 
-                    var rule = rules.First(c => c.Compare(text, i, text.Length).IsMatch);
+                    var rule = rules.First(c => !string.IsNullOrEmpty(c.Compare(text, i, text.Length)));
                     if (_ignored.Contains(_ruleDefinitions[rule]))
                         continue;
 
                     var cmp = rule.Compare(text, i, text.Length);
-                    if (string.IsNullOrEmpty(cmp.Matched)) throw new Exception("Comparer returned empty match");
-                    yield return new TokenMatch<T> { Type = _ruleDefinitions[rule], Match = cmp.Matched };
+                    yield return new TokenMatch<T> { Type = _ruleDefinitions[rule], Match = cmp };
                     i += cmp.Length - 1;
                     continue;
                 }
 
-                if (gIdx == -1)
-                    gIdx = i;
+                if (gIdx == -1) gIdx = i;
             }
 
-            if (gIdx > -1)
-                yield return new TokenMatch<T> { Type = _general, Match = text.Substring(gIdx, text.Length - gIdx) };
+            if (gIdx > -1) yield return new TokenMatch<T> { Type = _default, Match = text.Substring(gIdx, text.Length - gIdx) };
         }
 
         private Dictionary<LexerComparer, T> _ruleDefinitions = new Dictionary<LexerComparer, T>();
@@ -79,16 +77,9 @@ namespace ArithmeticExpression.Interpreter
         }
     }
 
-    public struct LexerMatch
-    {
-        public bool IsMatch;
-        public int Length;
-        public string Matched;
-    }
-
     public abstract class LexerComparer
     {
-        public abstract LexerMatch Compare(string control, int start, int size);
+        public abstract string Compare(string control, int start, int size);
     }
 
     public class StringLexerComparer : LexerComparer
@@ -102,24 +93,47 @@ namespace ArithmeticExpression.Interpreter
 
         private string ToMatch;
 
-        public override LexerMatch Compare(string control, int start, int size)
+        public override string Compare(string control, int start, int size)
         {
-            if (start + ToMatch.Length < size && control.Substring(start, ToMatch.Length) == ToMatch)
-                return new LexerMatch { IsMatch = true, Length = ToMatch.Length, Matched = control.Substring(start, ToMatch.Length) };
-            return new LexerMatch { IsMatch = false };
+            if (start + ToMatch.Length > size || control.Substring(start, ToMatch.Length) != ToMatch) return null;
+            return control.Substring(start, ToMatch.Length);
         }
     }
 
     public class NumberLexerComparer : LexerComparer
     {
-        public override LexerMatch Compare(string control, int start, int size)
+        public override string Compare(string control, int start, int size)
         {
             var c = 0;
             var i = new Func<int>(() => start + c);
             while (i() < size && (char.IsDigit(control[i()]) || control[i()].Equals('.'))) c++;
-            if (c == 0)
-                return new LexerMatch { IsMatch = false };
-            return new LexerMatch { IsMatch = true, Length = c, Matched = control.Substring(start, c) };
+            if (c == 0) return null;
+            return control.Substring(start, c);
         }
+    }
+
+    public class RegexLexerComparer : LexerComparer
+    {
+        public RegexLexerComparer(Regex regex)
+        {
+            rgx = regex;
+        }
+
+        public RegexLexerComparer(string pattern)
+        {
+            if (string.IsNullOrEmpty(pattern))
+                throw new Exception("RegexLexerComparer initialized with empty string");
+            rgx = new Regex(pattern);
+        }
+
+        private Regex rgx;
+
+        public override string Compare(string control, int start, int size)
+        {
+            if (!rgx.IsMatch(control, start)) return null;
+            return rgx.Match(control, start).Value;
+        }
+
+        public static readonly RegexLexerComparer EmailPreset = new RegexLexerComparer(@"^[^<>\s\@]+(\@[^<>\s\@]+(\.[^<>\s\@]+)+)$");
     }
 }

@@ -39,11 +39,14 @@ namespace ArithmeticExpression.Interpreter
         public void Parse(string input)
         {
             var tokens = _tokenizer.Parse(input).ToArray();
+            //foreach (var t in tokens)
+            //    Console.WriteLine(t);
 
+            var hasFlag = new Func<Tokens, Tokens, bool>((e, f) => (e & f) == f);
             var bounds = new Func<int, bool>(i => i > -1 && i < tokens.Length);
-            var ensureOperand = new Func<int, bool>(i => bounds(i) && Operands.HasFlag(tokens[i].Type));
-            var ensureOperator = new Func<int, bool>(i => bounds(i) && Operators.HasFlag(tokens[i].Type));
-            var ensureUnary = new Func<int, bool>(i => bounds(i) && Unary.HasFlag(tokens[i].Type));
+            var ensureOperand = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Operands, tokens[i].Type));
+            var ensureOperator = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Operators, tokens[i].Type));
+            var ensureUnary = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Unary, tokens[i].Type));
 
             var order = new Queue<ExpressionNode>();
 
@@ -100,24 +103,25 @@ namespace ArithmeticExpression.Interpreter
             [Tokens.Equals] = ArithmeticOperators.Define,
         };
 
-        public static readonly Tokens Operands = Tokens.Number | Tokens.Variable;
-        public static readonly Tokens Operators = Tokens.Equals | Tokens.Plus | Tokens.Minus | Tokens.Asterisk | Tokens.Slash | Tokens.Caret;
-        public static readonly Tokens Unary = Tokens.Minus;
-
-        public enum Tokens
+        [Flags]
+        public enum Tokens : ushort
         {
-            Equals,
-            Plus,
-            Minus,
-            Asterisk,
-            Slash,
-            Caret,
-            Percent,
-            LeftParanthesis,
-            RightParanthesis,
-            Number,
-            Variable,
-            Whitespace
+            Equals = 0,
+            Plus = 1 << 0,
+            Minus = 1 << 1,
+            Asterisk = 1 << 2,
+            Slash = 1 << 3,
+            Caret = 1 << 4,
+            Percent = 1 << 5,
+            LeftParanthesis = 1 << 6,
+            RightParanthesis = 1 << 7,
+            Number = 1 << 8,
+            Variable = 1 << 9,
+            Whitespace = 1 << 10,
+
+            Operands = Number | Variable,
+            Operators = Equals | Plus | Minus | Asterisk | Slash | Caret,
+            Unary = Minus
         }
     }
 }
