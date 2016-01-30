@@ -10,75 +10,101 @@ namespace ArithmeticExpression.Interpreter
 {
     public class InputParser
     {
-        public InputParser(Expression.Expression tree)
+        public InputParser(ExpressionTree expression)
         {
-            Tree = tree;
-
-            // If none of the rules match, we assume that the token is a variable
-            _tokenizer = new TokenParser<Tokens>(Tokens.Variable);
-
-            _tokenizer.AddRule("=", Tokens.Equals);
-            _tokenizer.AddRule("+", Tokens.Plus);
-            _tokenizer.AddRule("-", Tokens.Minus);
-            _tokenizer.AddRule("*", Tokens.Asterisk);
-            _tokenizer.AddRule("/", Tokens.Slash);
-            _tokenizer.AddRule("^", Tokens.Caret);
-            _tokenizer.AddRule("%", Tokens.Percent);
-            _tokenizer.AddRule("(", Tokens.LeftParanthesis);
-            _tokenizer.AddRule(")", Tokens.RightParanthesis);
-            _tokenizer.AddRule(" ", Tokens.Whitespace);
-            _tokenizer.AddRule(new NumberLexerComparer(), Tokens.Number);
-
-            _tokenizer.Ignore(Tokens.Whitespace);
+            Expression = expression;
         }
 
-        private TokenParser<Tokens> _tokenizer;
-
-        public Expression.Expression Tree { get; private set; }
+        public ExpressionTree Expression { get; private set; }
 
         public void Parse(string input)
         {
-            var tokens = _tokenizer.Parse(input).ToArray();
-            //foreach (var t in tokens)
-            //    Console.WriteLine(t);
+            Expression.Build(CreatePostfixExpression(input));
+        }
 
-            var hasFlag = new Func<Tokens, Tokens, bool>((e, f) => (e & f) == f);
-            var bounds = new Func<int, bool>(i => i > -1 && i < tokens.Length);
-            var ensureOperand = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Operands, tokens[i].Type));
-            var ensureOperator = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Operators, tokens[i].Type));
-            var ensureUnary = new Func<int, bool>(i => bounds(i) && hasFlag(Tokens.Unary, tokens[i].Type));
+        private static TokenParser<Tokens> CreateExpressionTokenizer()
+        {
+            var t = new TokenParser<Tokens>(Tokens.Variable);
 
-            var order = new Queue<ExpressionNode>();
+            t.AddRule("=", Tokens.Equals);
+            t.AddRule("+", Tokens.Plus);
+            t.AddRule("-", Tokens.Minus);
+            t.AddRule("*", Tokens.Asterisk);
+            t.AddRule("/", Tokens.Slash);
+            t.AddRule("^", Tokens.Caret);
+            t.AddRule("%", Tokens.Percent);
+            t.AddRule("(", Tokens.LeftParanthesis);
+            t.AddRule(")", Tokens.RightParanthesis);
+            t.AddRule(" ", Tokens.Whitespace);
+            t.AddRule(new NumberLexerComparer(), Tokens.Number);
 
-            var parDepth = 0;
+            t.Ignore(Tokens.Whitespace);
 
-            for (int i = 0; i < tokens.Count(); i++)
+            return t;
+        }
+
+        public static Stack<TokenMatch<Tokens>> CreatePostfixTokenStack(string infix)
+        {
+            var tokenizer = CreateExpressionTokenizer();
+            var tokens = tokenizer.Parse(infix);
+
+            var stack = new Stack<TokenMatch<Tokens>>();
+            var postfix = new Stack<TokenMatch<Tokens>>();
+
+            foreach (var token in tokens)
             {
-                var token = tokens[i];
-                if (token.Type == Tokens.LeftParanthesis) parDepth++;
-                if (token.Type == Tokens.RightParanthesis)
+                // Operator
+                if ((Tokens.Operators & token.Type) == token.Type)
                 {
-                    if (parDepth > 0)
-                    {
-                        while (order.Count > 0) Tree.Add(order.Dequeue());
-                        Tree.PrecedenceBuild();
-                        parDepth--;
-                    }
-                    else throw new Exception("( expected");
+                    while (stack.Count > 0
+                        && (Tokens.Operators & stack.Peek().Type) == stack.Peek().Type
+                        && OperatorNode.OperatorPrecedence[TokenArithmeticOperators[token.Type]] >= OperatorNode.OperatorPrecedence[TokenArithmeticOperators[stack.Peek().Type]])
+                        postfix.Push(stack.Pop());
+                    stack.Push(token);
                 }
 
-                if (ensureUnary(i) && ensureOperand(i - 1))
-                    order.Enqueue(new OperatorNode(TokenArithmeticOperators[token.Type])); // TokenUnaryOperators
-                else if (ensureOperator(i) && ensureOperand(i - 1) && ensureOperand(i + 1))
-                    order.Enqueue(new OperatorNode(TokenArithmeticOperators[token.Type]));
-                else if (ensureOperand(i) && token.Type == Tokens.Number)
-                    order.Enqueue(new ValueNode(double.Parse(token.Match)));
-                else if (ensureOperand(i) && token.Type == Tokens.Variable)
-                    order.Enqueue(new VariableNode(token.Match));
+                if (token.Type == Tokens.LeftParanthesis)
+                {
+                    stack.Push(token);
+                }
+
+                if (token.Type == Tokens.RightParanthesis)
+                {
+                    while (stack.Count > 0)
+                    {
+                        var pop = stack.Pop();
+                        if (pop.Type == Tokens.LeftParanthesis)
+                            continue;
+                        postfix.Push(pop);
+                    }
+                }
+
+                if ((Tokens.Operands & token.Type) == token.Type)
+                {
+                    postfix.Push(token);
+                }
             }
-            if (parDepth > 0) throw new Exception(") expected");
-            while (order.Count > 0) Tree.Add(order.Dequeue());
-            Tree.PrecedenceBuild();
+
+            while (stack.Count > 0)
+                postfix.Push(stack.Pop());
+
+            return postfix;
+        }
+
+        public static IEnumerable<ExpressionNode> CreatePostfixExpression(string infix)
+        {
+            foreach (var token in CreatePostfixTokenStack(infix).Reverse())
+            {
+                if ((Tokens.Operators & token.Type) == token.Type)
+                    yield return new OperatorNode(TokenArithmeticOperators[token.Type]);
+                if ((Tokens.Operands & token.Type) == token.Type)
+                {
+                    if (token.Type == Tokens.Number)
+                        yield return new ValueNode(double.Parse(token.Match));
+                    if (token.Type == Tokens.Variable)
+                        yield return new VariableNode(token.Match);
+                }
+            }
         }
 
         public static readonly Dictionary<Tokens, AssignmentOperators> TokenAssignmentOperators = new Dictionary<Tokens, AssignmentOperators>()
@@ -106,18 +132,18 @@ namespace ArithmeticExpression.Interpreter
         [Flags]
         public enum Tokens : ushort
         {
-            Equals = 0,
-            Plus = 1 << 0,
-            Minus = 1 << 1,
-            Asterisk = 1 << 2,
-            Slash = 1 << 3,
-            Caret = 1 << 4,
-            Percent = 1 << 5,
-            LeftParanthesis = 1 << 6,
-            RightParanthesis = 1 << 7,
-            Number = 1 << 8,
-            Variable = 1 << 9,
-            Whitespace = 1 << 10,
+            Equals = 1 << 0,
+            Plus = 1 << 1,
+            Minus = 1 << 2,
+            Asterisk = 1 << 3,
+            Slash = 1 << 4,
+            Caret = 1 << 5,
+            Percent = 1 << 6,
+            LeftParanthesis = 1 << 7,
+            RightParanthesis = 1 << 8,
+            Number = 1 << 9,
+            Variable = 1 << 10,
+            Whitespace = 1 << 11,
 
             Operands = Number | Variable,
             Operators = Equals | Plus | Minus | Asterisk | Slash | Caret,

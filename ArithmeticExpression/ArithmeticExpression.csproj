@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ArithmeticExpression</RootNamespace>
     <AssemblyName>ArithmeticExpression</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -47,7 +47,7 @@
     <Compile Include="Expression\Algebra.cs" />
     <Compile Include="Expression\BinTree\OperandNode.cs" />
     <Compile Include="Expression\BinTree\OperatorNode.cs" />
-    <Compile Include="Expression\Expression.cs" />
+    <Compile Include="Expression\ExpressionTree.cs" />
     <Compile Include="Expression\BinTree\ExpressionNode.cs" />
     <Compile Include="Expression\OperandContext.cs" />
     <Compile Include="Expression\Operators.cs" />

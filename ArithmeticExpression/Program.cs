@@ -15,7 +15,7 @@ namespace ArithmeticExpression
             Console.Title = "ArithmeticExpression";
             Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree");
 
-            var e = new Expression.Expression();
+            var e = new Expression.ExpressionTree();
             var p = new Interpreter.InputParser(e);
 
             string line;
@@ -37,7 +37,7 @@ namespace ArithmeticExpression
 
                     default:
                         p.Parse(line);
-                        Console.WriteLine("Stack: [{0}]", string.Join(" ", e.TreeStack.Select(n => n.Evaluate(e.Context))));
+                        Console.WriteLine("Stack: [{0}]", string.Join(" ", e.Expression.Select(n => n.Evaluate(e.Context))));
                         break;
                 }
             }
