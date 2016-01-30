@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ArithmeticExpression.Expression;
+﻿using ArithmeticExpression.Expression;
 using ArithmeticExpression.Expression.BinTree;
+using System;
 
 namespace ArithmeticExpression
 {
@@ -15,7 +11,7 @@ namespace ArithmeticExpression
             Console.Title = "ArithmeticExpression";
             Console.WriteLine("'vars' to list variables, 'clear' to clear expression tree");
 
-            var e = new Expression.ExpressionTree();
+            var e = new ExpressionTree();
             var p = new Interpreter.InputParser(e);
 
             string line;
@@ -37,7 +33,18 @@ namespace ArithmeticExpression
 
                     default:
                         p.Parse(line);
-                        Console.WriteLine("Stack: [{0}]", string.Join(" ", e.Expression.Select(n => n.Evaluate(e.Context))));
+                        try
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine(e.InfixExpression);
+                            Console.WriteLine($"Stack: [{string.Join(" ", e.GetEvaluated())}]");
+                        }
+                        catch (UndefinedVariableException ex)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($">> {ex.Message}");
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                        }
                         break;
                 }
             }

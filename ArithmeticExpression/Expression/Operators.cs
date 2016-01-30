@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Expression
 {
@@ -20,7 +16,7 @@ namespace ArithmeticExpression.Expression
         Increment,
         Decrement,
         Invert
-    }    
+    }
 
     [Flags]
     public enum ArithmeticOperators

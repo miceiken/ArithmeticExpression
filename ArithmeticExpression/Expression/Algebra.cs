@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Expression
 {
@@ -20,5 +17,27 @@ namespace ArithmeticExpression.Expression
 
                 [ArithmeticOperators.Define] = (l, r) => r,
             };
+
+        public static readonly Dictionary<ArithmeticOperators, Precedence> OperatorPrecedence = new Dictionary<ArithmeticOperators, Precedence>()
+        {
+            [ArithmeticOperators.Multiply] = Precedence.Multiplicative,
+            [ArithmeticOperators.Divide] = Precedence.Multiplicative,
+            [ArithmeticOperators.Exponent] = Precedence.Multiplicative,
+            [ArithmeticOperators.Modulus] = Precedence.Multiplicative,
+            [ArithmeticOperators.Add] = Precedence.Additive,
+            [ArithmeticOperators.Subtract] = Precedence.Additive,
+            [ArithmeticOperators.Define] = Precedence.Assignment,
+        };
+
+        public static readonly Dictionary<ArithmeticOperators, char> OperatorLiterals = new Dictionary<ArithmeticOperators, char>()
+        {
+            [ArithmeticOperators.Multiply] = '*',
+            [ArithmeticOperators.Divide] = '/',
+            [ArithmeticOperators.Exponent] = '^',
+            [ArithmeticOperators.Modulus] = '%',
+            [ArithmeticOperators.Add] = '+',
+            [ArithmeticOperators.Subtract] = '-',
+            [ArithmeticOperators.Define] = '=',
+        };
     }
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Expression.BinTree
 {
@@ -41,14 +37,29 @@ namespace ArithmeticExpression.Expression.BinTree
         public override double Evaluate(OperandContext ctx)
         {
             if (string.IsNullOrEmpty(VariableName))
-                throw new Exception("Attempt to reference unnamed variable");
+                throw new UndefinedVariableException("Attempt to reference unnamed variable");
 
             if (!ctx.Variables.ContainsKey(VariableName))
-                throw new Exception("Undefined variable '" + VariableName + "' referenced");
+                throw new UndefinedVariableException("Undefined variable '" + VariableName + "' referenced");
 
             return ctx.Variables[VariableName];
         }
 
         public override string Literal { get { return VariableName; } }
+    }
+
+    public class UndefinedVariableException : Exception
+    {
+        public UndefinedVariableException()
+        {
+        }
+
+        public UndefinedVariableException(string message)
+            : base(message)
+        { }
+
+        public UndefinedVariableException(string message, Exception inner)
+            : base(message, inner)
+        { }
     }
 }

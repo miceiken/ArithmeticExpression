@@ -1,10 +1,8 @@
-﻿using System;
+﻿using ArithmeticExpression.Expression;
+using ArithmeticExpression.Expression.BinTree;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ArithmeticExpression.Expression;
-using ArithmeticExpression.Expression.BinTree;
 
 namespace ArithmeticExpression.Interpreter
 {
@@ -58,7 +56,7 @@ namespace ArithmeticExpression.Interpreter
                 {
                     while (stack.Count > 0
                         && (Tokens.Operators & stack.Peek().Type) == stack.Peek().Type
-                        && OperatorNode.OperatorPrecedence[TokenArithmeticOperators[token.Type]] >= OperatorNode.OperatorPrecedence[TokenArithmeticOperators[stack.Peek().Type]])
+                        && Algebra.OperatorPrecedence[TokenArithmeticOperators[token.Type]] >= Algebra.OperatorPrecedence[TokenArithmeticOperators[stack.Peek().Type]])
                         postfix.Push(stack.Pop());
                     stack.Push(token);
                 }

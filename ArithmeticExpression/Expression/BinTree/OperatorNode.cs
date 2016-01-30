@@ -1,31 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ArithmeticExpression.Expression.BinTree
 {
     public class OperatorNode : ExpressionNode
     {
-        public static readonly Dictionary<ArithmeticOperators, Precedence> OperatorPrecedence = new Dictionary<ArithmeticOperators, Precedence>()
-        {
-            [ArithmeticOperators.Multiply] = Precedence.Multiplicative,
-            [ArithmeticOperators.Divide] = Precedence.Multiplicative,
-            [ArithmeticOperators.Exponent] = Precedence.Multiplicative,
-            [ArithmeticOperators.Modulus] = Precedence.Multiplicative,
-            [ArithmeticOperators.Add] = Precedence.Additive,
-            [ArithmeticOperators.Subtract] = Precedence.Additive,
-            [ArithmeticOperators.Define] = Precedence.Assignment,
-        };
-
         public OperatorNode(ArithmeticOperators oper)
         {
             Operator = oper;
         }
 
         public ArithmeticOperators Operator { get; private set; }
-        public Precedence Precedence { get { return OperatorPrecedence[Operator]; } }
+        public Precedence Precedence { get { return Algebra.OperatorPrecedence[Operator]; } }
 
         public override bool Consume(OperandContext ctx)
         {

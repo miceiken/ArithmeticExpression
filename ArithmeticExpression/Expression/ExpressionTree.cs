@@ -1,10 +1,6 @@
-﻿using System;
+﻿using ArithmeticExpression.Expression.BinTree;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ArithmeticExpression.Expression.BinTree;
-using System.Diagnostics;
 
 namespace ArithmeticExpression.Expression
 {
@@ -19,7 +15,7 @@ namespace ArithmeticExpression.Expression
         public bool IsComplete => Expression.Count == 1;
         public void Clear() => Expression.Clear();
 
-        public ExpressionNode Build(IEnumerable<ExpressionNode> nodes)
+        public void Build(IEnumerable<ExpressionNode> nodes)
         {
             Expression = new Stack<ExpressionNode>();
 
@@ -36,10 +32,33 @@ namespace ArithmeticExpression.Expression
                 if (!node.Consume(Context))
                     Expression.Push(node);
             }
+        }
 
-            //Debug.Assert(IsComplete, "Incomplete expression, stack has more than 1 elements");
+        public IEnumerable<double> GetEvaluated() => Expression.Select(n => n.Evaluate(Context));
 
-            return Expression.FirstOrDefault();
+        public string InfixExpression => string.Join(" ", Expression.Select(n => GetLiteral(n, true)));
+
+        public string GetLiteral(ExpressionNode node, bool useContext)
+        {
+            var ret = string.Empty;
+            if (node is OperatorNode)
+                ret += "(";
+            if (node.Left != null)
+                ret += GetLiteral(node.Left, useContext);
+            if (node is OperatorNode)
+                ret += Algebra.OperatorLiterals[((OperatorNode)node).Operator];
+            if (node is OperandNode)
+            {
+                if (node is ValueNode)
+                    ret += ((ValueNode)node).Value.ToString();
+                if (node is VariableNode)
+                    ret += useContext ? ((VariableNode)node).Evaluate(Context).ToString() : ((VariableNode)node).VariableName;
+            }
+            if (node.Right != null)
+                ret += GetLiteral(node.Right, useContext);
+            if (node is OperatorNode)
+                ret += ")";
+            return ret;
         }
     }
 }
